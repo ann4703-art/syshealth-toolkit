@@ -1,0 +1,9 @@
+# Ignore temporary output files  expect the ones we must sumbit
+*.txt
+!git_log_lab*.txt
+!collector_output.txt
+!monitor_with_alerts.txt
+!log_summary.txt
+!daily_report_*.txt
+!final_report.txt
+!syshelath_log_excerpt.txt
