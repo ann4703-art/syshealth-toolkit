@@ -15,33 +15,34 @@ CURRENT_DATE=$(date '+%Y-%m-%d %H:%M:%S')
 #With double quotes -> safe (Bash best practice)
 echo "Hostname without quotes:$HOSTNAME"
 echo "Hostname with quotes: \"$HOSTNAME\""
-cat << EOF
+cat  <<   EOF
 # COMMENT FOR GRADER:
 #In my python/java variable expand safely.
 #In Bash, unqouted \$VAR splits on spaces/tabs/newlines.
-#Always double-quote unless you debliberately want splitting EOF
+#Always double-quote unless you debliberately want splitting
+EOF
 #-----System metrics collection ---
 UPTIME=$(uptime -p)
-DISK_USAGE=$(df -h |tail -1)
+DISK_USAGE=$(df -h / |tail -1)
 MEMORY_USAGE=$(free -h | awk '/Mem:/ {print $3 "/"$2}')
-PROCESS_COUNT=$(PS -e | wc -1)		
+PROCESS_COUNT=$(ps -e | wc -l)		
 # --- Output handling ---
-OUT_FILE="${1:-}"
-print_report(){
-printf "=====================\n"
-printf "System Health Report -%s\n""$CURRENT_DATE"
-printf"Hostname          :  %s\n""HOSTNAME"
-printf"Uptime      : %s\n""UPTIME"
-printf"Disk   /         :%s\n" "DISK_USAGE"
-printf"Memory used   : %s\n" "$MEMORY_USAGE"
-printf"Total process : %s\n" "PROCESS_COUNT"
-printf"	======================\n"
+OUTPUT_FILE="${1:-}"
+print_report() {
+ printf "=====================\n"
+ printf "System Health Report - %s\n" "$CURRENT_DATE"
+ printf "Hostname          :  %s\n" "$HOSTNAME"
+ printf "Uptime      : %s\n" "$UPTIME"
+ printf "Disk   /         :%s\n" "$DISK_USAGE"
+ printf "Memory used   : %s\n" "$MEMORY_USAGE"
+ printf "Total process : %s\n" "$PROCESS_COUNT"
+ printf "	======================\n"
 }
-if[-n "$OUTPUT_FILE"]; then
-print_report >"$OUTPUT_FILE"
-echo "Report written to $OUTPUT_FILE"
+if [ -n "$OUTPUT_FILE" ]; then
+   print_report >"$OUTPUT_FILE"
+  echo "Report written to $OUTPUT_FILE"
 else
-  print_report
+   print_report
 
 fi
-exit 0
+ exit 0
