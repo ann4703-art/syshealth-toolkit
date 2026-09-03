@@ -1,4 +1,9 @@
-* a2b8a54 (HEAD -> master) Add positional argument handling and report output
+* 4a972e6 (HEAD -> master) Remove files not required for submission
+* 0f06a24 Test script and update collector output
+| * 0b60c22 (origin/master, origin/HEAD) syshealth.sh
+|/  
+* fe7a360 Add Lab 1 submission log
+* a2b8a54 Add positional argument handling and report output
 * 01cc01a Add positional argument handling and report output
 * ffe8327 Implement command substitution for system metrics
 * df85df4 Demostrate quoting rules with explanatory comment
