@@ -1,7 +1,8 @@
-* 5fcd3df (HEAD -> master) Update Lab 1 submission log
+* 0b51be2 (HEAD -> master, origin/master, origin/HEAD) Regenerate final lab 1 deliverables
+* 5fcd3df Update Lab 1 submission log
 * 3b5abb5 Remove files not required for submission
 * 9105b4c Test script and update collector output
-* 0b60c22 (origin/master, origin/HEAD) syshealth.sh
+* 0b60c22 syshealth.sh
 * fe7a360 Add Lab 1 submission log
 * a2b8a54 Add positional argument handling and report output
 * 01cc01a Add positional argument handling and report output
