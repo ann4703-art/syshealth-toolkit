@@ -71,6 +71,27 @@ else
     print_status "OK" "Disk usage on / is ${DISK_PCT}%"
 fi
 
+# The for loop checks every required mount point using the same threshold.
+# mountpoint -q avoids parsing directory text and 2>/dev/null hides expected lookup errors.
+for mount in / /home /var; do
+    if mountpoint -q "$mount" 2>/dev/null || [[ "$mount" == "/" ]]; then
+        # df -P and awk provide a predictable percentage; quotes protect mount names.
+        PCT="$(df -P "$mount" | awk 'NR == 2 {gsub(/%/, "", $5); print $5}')"
+
+        if [[ ! "$PCT" =~ ^[0-9]+$ ]]; then
+            print_status "ALERT" "Unable to determine disk usage on $mount"
+            ((ALERT_COUNT += 1))
+        elif (( PCT > DISK_THRESHOLD )); then
+            print_status "ALERT" "Disk usage on $mount is ${PCT}% (threshold ${DISK_THRESHOLD}%)"
+            ((ALERT_COUNT += 1))
+        else
+            print_status "OK" "Disk usage on $mount is ${PCT}%"
+        fi
+    else
+        print_status "OK" "Mount point $mount does not exist or is not a mountpoint on this system"
+    fi
+done
+
 # Memory is checked only after confirming that awk returned an integer.
 if [[ ! "$MEM_PCT" =~ ^[0-9]+$ ]]; then
     print_status "ALERT" "Unable to determine memory usage"
