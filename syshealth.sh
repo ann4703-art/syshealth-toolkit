@@ -5,6 +5,12 @@
 # Project: System Health & Log Analysis Toolkit
 # Author: Abdulaziz Nasser
 # Date: $(date +%Y-%m-%d)
+# --- Thresholds (change these values to test alert behavior) ---
+# Centralized thresholds allow alert sensitivity to change without rewriting the health-check logic.
+CPU_THRESHOLD=75
+MEM_THRESHOLD=85
+DISK_THRESHOLD=85
+
 # ===============================================
 
 # This script collects basic information about the health of a Linux system.
