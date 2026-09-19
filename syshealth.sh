@@ -1,10 +1,9 @@
 #!/usr/bin/env bash
+# Lab 2: Health Checks with Conditionals
+# System Health and Log Analysis Toolkit for Rocky Linux 9
+# Author: Abdulaziz Alhaddad
+# Date: 2026-09-19
 
-# ===============================================
-# Lab 1: Bash Basics - Building the Data Collector
-# Project: System Health & Log Analysis Toolkit
-# Author: Abdulaziz Nasser
-# Date: $(date +%Y-%m-%d)
 # --- Thresholds (change these values to test alert behavior) ---
 # Centralized thresholds allow alert sensitivity to change without rewriting the health-check logic.
 CPU_THRESHOLD=75
@@ -27,86 +26,102 @@ print_status() {
     fi
 }
 
-
-# ===============================================
-
-# This script collects basic information about the health of a Linux system.
-# The shebang tells Linux to find Bash through env and use it to run the script.
-# This form is portable because Bash may be stored in different locations.
-
-# --- Variables and quoting demonstration ---
-
-# Command substitution uses $(command) to run a command and save its result.
-# Here, hostname finds the computer's name and stores it in HOSTNAME.
-# Quotes are unnecessary during this assignment because Bash does not perform
-# word splitting on values assigned directly to variables.
-HOSTNAME=$(hostname)
-
-# The date command returns the current date and time.
-# The format is inside single quotes so it is passed as one argument to date.
-CURRENT_DATE=$(date '+%Y-%m-%d %H:%M:%S')
-
-# These lines demonstrate how a variable can appear in output.
-# Double quotes protect the value and keep it together as one argument.
-echo "Hostname without quotes: $HOSTNAME"
-echo "Hostname with quotes: \"$HOSTNAME\""
-
-# This message explains why quoting variables is important in Bash.
-cat << EOF
-QUOTING EXPLANATION:
-If a variable is expanded without quotes, Bash may divide its value at spaces,
-tabs, or new lines. It may also interpret wildcard characters in the value.
-Writing "\$HOSTNAME" protects the value and treats it as one complete argument.
-For this reason, I normally use double quotes when expanding Bash variables.
-EOF
-
-# --- System metrics collection ---
-
-# uptime -p displays how long the system has been running in readable wording.
-UPTIME=$(uptime -p)
-
-# df -h / displays disk usage for the root filesystem in readable units.
-# The pipe sends the result to tail, and tail -1 selects the final data line.
-DISK_USAGE=$(df -h / | tail -1)
-
-# free -h displays memory information in readable units.
-# The pipe passes it to awk, which finds the Mem line and prints
-# the used memory followed by the total memory.
-MEMORY_USAGE=$(free -h | awk '/Mem:/ {print $3 "/" $2}')
-
-# ps -e lists all running processes.
-# The pipe sends the list to wc -l, which counts the number of lines.
-PROCESS_COUNT=$(ps -e | wc -l)
-
-# --- Output handling ---
-
-# $1 represents the first argument entered after the script name.
-# ${1:-} uses the first argument when it exists or an empty value otherwise.
-# This allows the script to run safely even when no filename is supplied.
+# ${1:-} safely supplies an empty value when no output filename is provided.
 OUTPUT_FILE="${1:-}"
 
-# This function contains the report format.
-# Quoting each variable prevents unwanted word splitting.
+# Command substitution captures each command's output for the final report.
+# Double quotes preserve spaces in values and prevent unwanted word splitting.
+CURRENT_DATE="$(date '+%Y-%m-%d %H:%M:%S')"
+HOSTNAME="$(hostname)"
+UPTIME="$(uptime -p)"
+DISK_USAGE="$(df -hP / | awk 'NR == 2 {print $3 " used of " $2 " (" $5 ")"}')"
+MEMORY_USAGE="$(free -h | awk '/^Mem:/ {print $3 " used of " $2}')"
+PROCESS_COUNT="$(ps -e --no-headers | wc -l)"
+
+# df -P gives predictable POSIX columns; awk removes % so Bash can compare an integer.
+DISK_PCT="$(df -P / | awk 'NR == 2 {gsub(/%/, "", $5); print $5}')"
+
+# awk calculates used/total memory and rounds it to a whole percentage.
+MEM_PCT="$(free | awk '/^Mem:/ {printf "%.0f", ($3 / $2) * 100}')"
+
+# The loop finds the field labelled idle instead of depending on one fragile column position.
+# Removing nonnumeric characters leaves the idle value, which awk subtracts from 100.
+CPU_PCT="$(LC_ALL=C top -bn1 | awk -F',' '/^%Cpu/ {
+    for (i = 1; i <= NF; i++) {
+        if ($i ~ / id/) {
+            gsub(/[^0-9.]/, "", $i)
+            printf "%.0f", 100 - $i
+            exit
+        }
+    }
+}')"
+
+# A shared alert counter makes one or many failed checks produce exit code 1.
+ALERT_COUNT=0
+print_status "CHECK" "Running system health analysis..."
+
+# =~ inside [[ ]] validates parsed values before arithmetic expansion uses them.
+if [[ ! "$DISK_PCT" =~ ^[0-9]+$ ]]; then
+    print_status "ALERT" "Unable to determine disk usage on /"
+    ((ALERT_COUNT += 1))
+elif (( DISK_PCT > DISK_THRESHOLD )); then
+    print_status "ALERT" "Disk usage on / is ${DISK_PCT}% (threshold ${DISK_THRESHOLD}%)"
+    ((ALERT_COUNT += 1))
+else
+    print_status "OK" "Disk usage on / is ${DISK_PCT}%"
+fi
+
+# Memory is checked only after confirming that awk returned an integer.
+if [[ ! "$MEM_PCT" =~ ^[0-9]+$ ]]; then
+    print_status "ALERT" "Unable to determine memory usage"
+    ((ALERT_COUNT += 1))
+elif (( MEM_PCT > MEM_THRESHOLD )); then
+    print_status "ALERT" "Memory usage is ${MEM_PCT}% (threshold ${MEM_THRESHOLD}%)"
+    ((ALERT_COUNT += 1))
+else
+    print_status "OK" "Memory usage is ${MEM_PCT}%"
+fi
+
+# CPU is checked only after confirming that top and awk returned an integer.
+if [[ ! "$CPU_PCT" =~ ^[0-9]+$ ]]; then
+    print_status "ALERT" "Unable to determine CPU usage"
+    ((ALERT_COUNT += 1))
+elif (( CPU_PCT > CPU_THRESHOLD )); then
+    print_status "ALERT" "CPU usage is ${CPU_PCT}% (threshold ${CPU_THRESHOLD}%)"
+    ((ALERT_COUNT += 1))
+else
+    print_status "OK" "CPU usage is ${CPU_PCT}%"
+fi
+
+# Any alert makes the script unhealthy; otherwise it remains healthy.
+if (( ALERT_COUNT > 0 )); then
+    HEALTH_STATUS=1
+    HEALTH_TEXT="UNHEALTHY - see alerts above"
+else
+    HEALTH_STATUS=0
+    HEALTH_TEXT="HEALTHY"
+fi
+
+# printf uses explicit formats so collected values cannot become format strings.
 print_report() {
     printf "========================================\n"
     printf "System Health Report - %s\n" "$CURRENT_DATE"
-    printf "Hostname        : %s\n" "$HOSTNAME"
-    printf "Uptime          : %s\n" "$UPTIME"
-    printf "Disk /          : %s\n" "$DISK_USAGE"
-    printf "Memory used     : %s\n" "$MEMORY_USAGE"
-    printf "Total processes : %s\n" "$PROCESS_COUNT"
+    printf "Hostname          : %s\n" "$HOSTNAME"
+    printf "Uptime            : %s\n" "$UPTIME"
+    printf "Disk /            : %s\n" "$DISK_USAGE"
+    printf "Memory used       : %s\n" "$MEMORY_USAGE"
+    printf "Total processes   : %s\n" "$PROCESS_COUNT"
+    printf "Health status     : %s\n" "$HEALTH_TEXT"
     printf "========================================\n"
 }
 
-# -n is true when OUTPUT_FILE is not empty.
-# If a filename was supplied, > redirects the report into that file.
-# Otherwise, the report is printed on the terminal screen.
-if [ -n "$OUTPUT_FILE" ]; then
+# [[ -n ]] safely tests whether the optional output filename is nonempty.
+if [[ -n "$OUTPUT_FILE" ]]; then
     print_report > "$OUTPUT_FILE"
-    echo "Report written to $OUTPUT_FILE"
+    echo "Report written to $OUTPUT_FILE (alerts were printed to terminal)"
 else
     print_report
 fi
 
-# Exit status 0 means the script finished successfully.
-exit 0
+# Exit 0 means healthy; exit 1 allows cron or another script to detect an alert.
+exit "$HEALTH_STATUS"
