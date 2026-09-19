@@ -11,6 +11,23 @@ CPU_THRESHOLD=75
 MEM_THRESHOLD=85
 DISK_THRESHOLD=85
 
+# print_status keeps all status formatting in one reusable location.
+# local prevents function arguments from changing variables used elsewhere in the script.
+print_status() {
+    local status="$1"
+    local message="$2"
+
+    # [[ ]] safely compares strings without accidental word splitting or pathname expansion.
+    if [[ "$status" == "OK" ]]; then
+        echo -e "\e[32mOK: $message\e[0m"
+    elif [[ "$status" == "ALERT" ]]; then
+        echo -e "\e[31mALERT: $message\e[0m"
+    else
+        echo "$status: $message"
+    fi
+}
+
+
 # ===============================================
 
 # This script collects basic information about the health of a Linux system.
