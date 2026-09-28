@@ -1,5 +1,7 @@
-* 6995267 (HEAD -> master) Add detailed Lab 3 explanations and refresh health report
-* 9eaf6d3 (origin/master, origin/HEAD) Add Lab 3 submission log
+* 0a86af1 (HEAD -> master) Refresh final Lab 3 health report
+* ec5ec45 (origin/master, origin/HEAD) Update Lab 3 Git history
+* 6995267 Add detailed Lab 3 explanations and refresh health report
+* 9eaf6d3 Add Lab 3 submission log
 * 697af5d Implement run_health_checks, parse_arguments, generate_report and update main()
 * 418a26d Create check_disk_usage, check_memory_usage, and check_cpu_usage functions with return codes
 * 571b5c1 Extract print_status with local variables
@@ -16,5 +18,3 @@
 * 3b5abb5 Remove files not required for submission
 * 9105b4c Test script and update collector output
 * 0b60c22 syshealth.sh
-* fe7a360 Add Lab 1 submission log
-* a2b8a54 Add positional argument handling and report output
