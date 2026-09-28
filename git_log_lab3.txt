@@ -1,8 +1,10 @@
-* 697af5d (HEAD -> master) Implement run_health_checks, parse_arguments, generate_report and update main()
+* 6995267 (HEAD -> master) Add detailed Lab 3 explanations and refresh health report
+* 9eaf6d3 (origin/master, origin/HEAD) Add Lab 3 submission log
+* 697af5d Implement run_health_checks, parse_arguments, generate_report and update main()
 * 418a26d Create check_disk_usage, check_memory_usage, and check_cpu_usage functions with return codes
 * 571b5c1 Extract print_status with local variables
 * 5545312 Add main() function and basic script structure
-* 9549f4e (origin/master, origin/HEAD) Add Lab 2 submission files
+* 9549f4e Add Lab 2 submission files
 * ce230b6 Add mount-point loop and health exit code
 * cf848b7 Add conditional CPU memory and disk checks
 * 1080796 Implement color-coded status output
@@ -16,5 +18,3 @@
 * 0b60c22 syshealth.sh
 * fe7a360 Add Lab 1 submission log
 * a2b8a54 Add positional argument handling and report output
-* 01cc01a Add positional argument handling and report output
-* ffe8327 Implement command substitution for system metrics
